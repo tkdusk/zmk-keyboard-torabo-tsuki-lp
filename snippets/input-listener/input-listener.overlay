@@ -16,12 +16,3 @@
     device = <&pointing_device>;
     input-processors = <&trackball_gestures>;
 };
-
-&scroll_runtime_input_processor {
-    x-codes = <INPUT_REL_X>;
-    y-codes = <INPUT_REL_Y>;
-    xy-to-scroll-enabled;
-    active-layers = <0x00000008>;
-    scale-multiplier = <1>;
-    scale-divisor = <4>;
-};
