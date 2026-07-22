@@ -46,6 +46,7 @@ jobs:
         run: |
           mkdir -p ${ZMK_WS}
           cp -r ${GITHUB_WORKSPACE}/config ${ZMK_WS}/config
+          cp -r ${GITHUB_WORKSPACE}/scripts ${ZMK_WS}/scripts
           cd ${ZMK_WS}
           west init -l config
 
