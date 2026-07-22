@@ -1,4 +1,18 @@
+/ {
+    trackball_gestures: trackball_gestures {
+        compatible = "zmk,input-processor-gestures";
+        #input-processor-cells = <0>;
+        bindings = <&kp LC(UP)>, <&kp LC(DOWN)>, <&kp LC(LEFT)>, <&kp LC(RIGHT)>;
+        threshold = <60>;
+        timeout-ms = <180>;
+        cooldown-ms = <200>;
+        tap-ms = <30>;
+        active-layers = <0x00000020>;
+    };
+};
+
 &pointing_listener {
     status = "okay";
     device = <&pointing_device>;
+    input-processors = <&trackball_gestures>;
 };

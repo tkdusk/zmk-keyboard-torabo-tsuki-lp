@@ -1,0 +1,11 @@
+# Copyright (c) 2026 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+if ZMK_POINTING
+
+config ZMK_INPUT_PROCESSOR_GESTURES
+    bool "Gesture Input Processor"
+    default y
+    depends on DT_HAS_ZMK_INPUT_PROCESSOR_GESTURES_ENABLED
+
+endif

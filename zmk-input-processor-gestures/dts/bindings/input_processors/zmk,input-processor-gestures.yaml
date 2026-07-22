@@ -1,0 +1,38 @@
+# Copyright (c) 2026 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+description: Input processor for turning relative XY movement into directional behavior taps
+
+compatible: "zmk,input-processor-gestures"
+
+include: ip_zero_param.yaml
+
+properties:
+  "#input-processor-cells":
+    type: int
+    const: 0
+  type:
+    type: int
+  x-code:
+    type: int
+  y-code:
+    type: int
+  threshold:
+    type: int
+    description: "Minimum displacement (REL units) to trigger a gesture (default: 120)"
+  timeout-ms:
+    type: int
+    description: "Time window in ms to accumulate displacement (default: 180)"
+  cooldown-ms:
+    type: int
+    description: "Cooldown in ms between consecutive gestures (default: 220)"
+  tap-ms:
+    type: int
+    description: "Duration in ms for the triggered key tap (default: 30)"
+  bindings:
+    type: phandle-array
+    required: true
+    description: "Behaviors to invoke: [up, down, left, right]"
+  active-layers:
+    type: int
+    description: "Bitmask of layers on which this processor is active. 0 (default) = all layers."

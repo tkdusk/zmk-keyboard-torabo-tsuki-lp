@@ -1,0 +1,1 @@
+target_sources_ifdef(CONFIG_ZMK_INPUT_PROCESSOR_GESTURES app PRIVATE input_processor_gestures.c)

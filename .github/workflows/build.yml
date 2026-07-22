@@ -1,6 +1,144 @@
-name: Build ZMK firmware
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
+  matrix:
+    runs-on: ubuntu-22.04
+    name: Fetch Build Keyboards
+    outputs:
+      build_matrix: ${{ env.build_matrix }}
+      has_valid_build_matrix: ${{ steps.fetch.outputs.has_valid_build_matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Fetch Build Matrix
+        id: fetch
+        run: |
+          matrix_content=$(yq -oj -I0 'build.yaml')
+          if [ -z "$matrix_content" ] || [ "$matrix_content" = "null" ]; then
+            echo "has_valid_build_matrix=false" >> $GITHUB_OUTPUT
+          else
+            echo "build_matrix=$matrix_content" >> $GITHUB_ENV
+            echo "has_valid_build_matrix=true" >> $GITHUB_OUTPUT
+            echo "$matrix_content"
+          fi
+
   build:
-    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@v0.3
+    runs-on: ubuntu-latest
+    if: needs.matrix.outputs.has_valid_build_matrix == 'true'
+    container:
+      image: zmkfirmware/zmk-build-arm:stable
+    needs: matrix
+    name: Build
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix.outputs.build_matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare environment
+        run: |
+          ZMK_WS=/tmp/zmk-build
+          echo "ZMK_WS=${ZMK_WS}" >> $GITHUB_ENV
+          echo "ZMK_EXTRA_MODULES=${GITHUB_WORKSPACE};${GITHUB_WORKSPACE}/zmk-input-processor-gestures" >> $GITHUB_ENV
+
+      - name: West Init
+        run: |
+          mkdir -p ${ZMK_WS}
+          cp -r ${GITHUB_WORKSPACE}/config ${ZMK_WS}/config
+          cd ${ZMK_WS}
+          west init -l config
+
+      - name: West Update
+        working-directory: /tmp/zmk-build
+        run: west update --fetch-opt=--filter=tree:0
+
+      - name: Check ZMK revision
+        working-directory: /tmp/zmk-build
+        run: |
+          zmk_revision=$(west list -f "{revision}" zmk)
+          echo "zmk_revision=${zmk_revision}" >> $GITHUB_ENV
+          echo "ZMK revision: ${zmk_revision}"
+
+      - name: West Zephyr export
+        working-directory: /tmp/zmk-build
+        run: west zephyr-export
+
+      - name: Inject secret macros
+        env:
+          ENTER_PASS_BINDINGS: ${{ secrets.ENTER_PASS_BINDINGS }}
+        run: python3 scripts/inject_secrets.py
+
+      - name: West Build (${{ matrix.shield && format('{0} - ', matrix.shield) || '' }}${{ matrix.board }})
+        working-directory: /tmp/zmk-build
+        shell: sh -x {0}
+        run: |
+          west build \
+            -s zmk/app \
+            -d build \
+            -b "${{ matrix.board }}" \
+            ${{ matrix.snippet && format('-S "{0}"', matrix.snippet) || '' }} \
+            -- \
+            -DZMK_CONFIG="${GITHUB_WORKSPACE}/config" \
+            ${{ matrix.shield && format('-DSHIELD="{0}"', matrix.shield) || '' }} \
+            -DZMK_EXTRA_MODULES="${ZMK_EXTRA_MODULES}" \
+            ${{ matrix.cmake-args || '' }}
+
+      - name: Warn about building from main if build fails
+        if: failure() && env.zmk_revision == 'main'
+        run: |
+          echo "# Consider Pinning ZMK" >> $GITHUB_STEP_SUMMARY
+          echo "Your build failure might be the result of breaking changes on ZMK main." >> $GITHUB_STEP_SUMMARY
+
+      - name: ${{ matrix.board }} Kconfig file
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -f "/tmp/zmk-build/build/zephyr/.config" ]; then
+            grep -v -e "^#" -e "^$" "/tmp/zmk-build/build/zephyr/.config" | sort
+          else
+            echo "No Kconfig output"
+          fi
+
+      - name: ${{ matrix.board }} Devicetree file
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -f "/tmp/zmk-build/build/zephyr/zephyr.dts" ]; then
+            cat "/tmp/zmk-build/build/zephyr/zephyr.dts"
+          elif [ -f "/tmp/zmk-build/build/zephyr/zephyr.dts.pre" ]; then
+            cat -s "/tmp/zmk-build/build/zephyr/zephyr.dts.pre"
+          else
+            echo "No Devicetree output"
+          fi
+
+      - name: Rename artifacts
+        shell: sh -x {0}
+        run: |
+          mkdir /tmp/zmk-build/build/artifacts
+          if [ -f "/tmp/zmk-build/build/zephyr/zmk.uf2" ]; then
+            artifact_name="${{ matrix.artifact-name || format('{0}{1}', matrix.shield && format('{0}-', matrix.shield) || '', matrix.board) }}"
+            artifact_name=$(echo "${artifact_name}" | tr '/' '-' | tr ' ' '_')
+            cp "/tmp/zmk-build/build/zephyr/zmk.uf2" "/tmp/zmk-build/build/artifacts/${artifact_name}.uf2"
+          elif [ -f "/tmp/zmk-build/build/zephyr/zmk.bin" ]; then
+            artifact_name="${{ matrix.artifact-name || format('{0}{1}', matrix.shield && format('{0}-', matrix.shield) || '', matrix.board) }}"
+            artifact_name=$(echo "${artifact_name}" | tr '/' '-' | tr ' ' '_')
+            cp "/tmp/zmk-build/build/zephyr/zmk.bin" "/tmp/zmk-build/build/artifacts/${artifact_name}.bin"
+          fi
+
+      - name: Archive (${{ matrix.shield && format('{0} - ', matrix.shield) || '' }}${{ matrix.board }})
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact-${{ matrix.artifact-name || format('{0}{1}', matrix.shield && format('{0}-', matrix.shield) || '', matrix.board) }}
+          path: /tmp/zmk-build/build/artifacts
+
+  merge:
+    runs-on: ubuntu-latest
+    if: needs.matrix.outputs.has_valid_build_matrix == 'true'
+    needs: build
+    name: Merge Output Artifacts
+    steps:
+      - name: Merge Artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: firmware
+          pattern: artifact-*
+          delete-merged: true
