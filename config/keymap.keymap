@@ -143,6 +143,8 @@
 &trans  &kp F11  &kp F12  &kp F13  &kp F14  &kp F15  &trans  &trans  &out OUT_TOG  &none         &none           &none   &none   &trans
 &trans  &trans   &trans   &trans   &trans   &trans   &trans  &trans  &trans        &trans        &trans          &trans  &trans  &trans
             >;
+
+            sensor-bindings = <&scroll_up_down>;
         };
 
         MOUSE {
