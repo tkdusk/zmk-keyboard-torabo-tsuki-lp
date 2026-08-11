@@ -17,10 +17,10 @@
 &pointing_listener {
     status = "okay";
     device = <&pointing_device>;
-    input-processors = <&zip_xy_transform (INPUT_TRANSFORM_X_INVERT | INPUT_TRANSFORM_Y_INVERT)>, <&trackball_gestures>, <&zip_temp_layer MOUSE 500>;
+    input-processors = <&trackball_gestures>, <&zip_xy_transform (INPUT_TRANSFORM_X_INVERT | INPUT_TRANSFORM_Y_INVERT)>, <&zip_temp_layer MOUSE 500>;
 
     scroll_layer: scroll_layer {
         layers = <3>;
-        input-processors = <&zip_xy_transform (INPUT_TRANSFORM_X_INVERT | INPUT_TRANSFORM_Y_INVERT)>, <&zip_xy_to_scroll_mapper>, <&zip_scroll_scaler 1 4>;
+        input-processors = <&zip_xy_to_scroll_mapper>, <&zip_scroll_scaler 1 4>;
     };
 };
