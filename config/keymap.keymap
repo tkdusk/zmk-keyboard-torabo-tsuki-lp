@@ -152,7 +152,7 @@
 &none  &none               &none             &none                     &none                 &none                                                    &none                  &none          &none           &none             &none             &none
 &none  &to_layer_0 Q       &to_layer_0 W     &msc SCRL_UP              &to_layer_0 R         &to_layer_0 T                                            &to_layer_0 Y          &to_layer_0 U  &to_layer_0 I   &msc SCRL_UP      &to_layer_0 P     &none
 &none  &kp A               &mkp RCLK         &mkp MCLK                 &mkp LCLK             &to_layer_0 G      &none              &none              &to_layer_0 H          &to_layer_0 J  &kp K           &mkp LCLK         &mkp RCLK         &none
-&none  &to_layer_0 Z       &msc SCRL_LEFT    &msc SCRL_DOWN            &msc SCRL_RIGHT       &to_layer_0 B      &to_layer_0 LANG2  &to_layer_0 LANG1  &to_layer_0 N          &to_layer_0 M  &msc SCRL_LEFT  &msc SCRL_DOWN    &msc SCRL_RIGHT   &none
+&none  &trans              &msc SCRL_LEFT    &msc SCRL_DOWN            &msc SCRL_RIGHT       &to_layer_0 B      &to_layer_0 LANG2  &to_layer_0 LANG1  &to_layer_0 N          &to_layer_0 M  &msc SCRL_LEFT  &msc SCRL_DOWN    &msc SCRL_RIGHT   &none
 &none  &to_layer_0 LSHIFT  &to_layer_0 LGUI  &to_layer_0 LEFT_CONTROL  &to_layer_0 LEFT_ALT  &to_layer_0 SPACE  &trans             &trans             &to_layer_0 BACKSPACE  &none          &none           &to_layer_0 LBKT  &to_layer_0 INT1  &none
             >;
         };
