@@ -21,6 +21,6 @@
 
     scroll_layer: scroll_layer {
         layers = <3>;
-        input-processors = <&zip_xy_to_scroll_mapper>, <&zip_scroll_transform INPUT_TRANSFORM_X_INVERT>, <&zip_scroll_scaler 1 8>;
+        input-processors = <&zip_xy_to_scroll_mapper>, <&zip_scroll_transform INPUT_TRANSFORM_X_INVERT>, <&zip_scroll_scaler 1 16>;
     };
 };
